@@ -18,41 +18,11 @@ Autor: cwestend (https://github.com/cwestend/iNNterpol)
 """
 
 import numpy as np
-import matplotlib.pyplot as pl
 import torch
-import torch.utils.data
+from pathlib import Path
+from . import model as network_model, model_encoder as encoder_model
 
-import glob
-import os
-import sys
-import time
-
-# Need scipy to work in np.longdouble format
-#from scipy import linalg
-
-# If linearly interpolating
-# use https://github.com/cwestend/iNNterpol_PCA12/iNNterpol_PCA12.py
-
-try:
-    # hyperparam file 
-    files = glob.glob("./*.pth")
-    print('Reading the NN hyperparameter files: %s' % files[0])
-    files_enc = glob.glob("./*.pth_encoder")
-    print('Reading the CAE hyperparameter files: %s' % files_enc[0])
-except:
-    print('Cannot find the hyperparameter files')
-    sys.exit()
-"""
-try:
-    # SVD coefficients/covariances file 
-    file_cov = glob.glob("./atlas9_covs_ind_coefflogs12.npz")
-    
-    cov_data = np.load(file_cov[0], allow_pickle=True)
-    print('Reading the SVD file: %s' % file_cov[0])
-except:
-    print('Cannot find the SVD file')
-    sys.exit()
-"""
+_DATA = Path(__file__).resolve().parent
 
 def parse_input(in_values):
     try:
@@ -71,14 +41,6 @@ def innterpol(input_values):
     """ Function to interpolate in Atlas9 data: input 5 values of metal, carbon, other, temp, 10xlogg
         (array like) and outputs an array(71,4) with optical depth variation of mass(log), temp(log), 
         pres(log), and electronic density(log)"""
-
-    try:
-        # Import the model form local: there should be a model.py in dir
-        import model
-        import model_encoder
-    except:
-        print('Cannot find the model files (model.py and model_encoder.py) in current directory')
-        sys.exit()
 
     inp_val = parse_input(input_values)
     # Rescale as trained (so they had similar size)
@@ -104,19 +66,19 @@ def innterpol(input_values):
 
     # The interpolating NN
     device = "cpu"
-    checkpoint = max(files, key=os.path.getctime)
-    chk = torch.load(checkpoint, map_location=lambda storage, loc: storage)
+    checkpoint = _DATA / "2021-07-24-20-01-55.pth"
+    chk = torch.load(checkpoint, map_location="cpu", weights_only=False)
     hyperparameters = chk['hyperparameters']
-    model = model.Network(hyperparameters).to(device)
+    model = network_model.Network(hyperparameters).to(device)
     # model = model.MLP(hyperparameters).to(device)
     model.load_state_dict(chk['state_dict'])
     model.eval()
 
     # The CAE that encodes/decodes (model with CAE weights for encoding/decoding)
-    checkpoint_enc = max(files_enc, key=os.path.getctime)
-    chk_enc = torch.load(checkpoint_enc, map_location=lambda storage, loc: storage)
+    checkpoint_enc = _DATA / "2021-07-23-21-24-42.pth_encoder"
+    chk_enc = torch.load(checkpoint_enc, map_location="cpu", weights_only=False)
     hyperparameters_enc = chk_enc['hyperparameters']
-    model_encoder = model_encoder.Network(hyperparameters_enc).to(device)
+    model_encoder = encoder_model.Network(hyperparameters_enc).to(device)
     model_encoder.load_state_dict(chk_enc['state_dict'])
     model_encoder.eval()
     
@@ -124,7 +86,6 @@ def innterpol(input_values):
     # Output of the NN
     # We only need the forward pass, so we do not accumulate gradients
     with torch.no_grad():
-        global out_nn
         # We transform the input from Numpy to PyTorch tensor
         inputs = torch.tensor(inp_val.astype('float32')).to(device)
         out_nn = model(inputs)
@@ -135,7 +96,6 @@ def innterpol(input_values):
     # Applying the decoder on the predicted values by the NN
     # We only need the forward pass, so we do not accumulate gradients
     with torch.no_grad():
-        global out_de
         inputs = out_nn_t.to(device)
         out_de = model_encoder.decoder(inputs)
 

@@ -1,0 +1,9 @@
+graft src
+include tests/*.py
+prune training_MARCS
+prune train_data_ATLAS9
+prune iNNterpol_MARCS
+prune iNNterpol_PHOENIX
+prune iNNterpol_PCA12
+exclude model.py model_encoder.py example_atlas9.py
+global-exclude __pycache__ *.py[cod] .DS_Store

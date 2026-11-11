@@ -31,7 +31,19 @@ a smooth and reasonable values on these regions provided a reasonable departure 
 calculated model data. A study of these regions, together with the quality of the recovered models and the fluxes obtained 
 from these shall be undertaken in a future paper.
 
-# Requirements:
+## Installed package
+
+Install this repository with `python -m pip install .` from its root, then use:
+
+```python
+from innterpol.phoenix import innterpol
+atmosphere, taur = innterpol([0, 0, 5500, 2.5])
+```
+
+The model code and weights are bundled in the package; no particular working
+directory is required. The instructions below describe the original research scripts.
+
+# Original requirements:
 
 
 ```

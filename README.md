@@ -35,55 +35,84 @@ a smooth and reasonable values on these regions provided a reasonable departure 
 calculated model data. A study of these regions, together with the quality of the recovered models and the fluxes obtained 
 from these shall be undertaken in a future paper.
 
-# Requirements:
+## Installation
 
+Requires Python 3.9 or newer. Install from this fork (no PyPI release is required):
 
+```sh
+python -m pip install "git+https://github.com/dnidever/iNNterpol.git"
 ```
 
-Python 3.6/3.8 with Pytorch 11.1 (possibly 10.2 is ok)
+To install a local checkout:
 
-
-```
-## Data:
-
-No need to download any data! (just the weights, ofc) 
-
-## Files:
-
-The model.py with the training model for the NN and the model_encoder.py for the CAE encoder/decoder used are needed aswell as the *.pth files with the hyperparameters resulting from the NN and CAE training.
-
+```sh
+python -m pip install .
 ```
 
-model.py
-model_encoder.py
-<date-time>.pth
-<date-time-2>.pth_encoder
+For development use `python -m pip install -e ".[test]"`.
+NumPy and PyTorch are installed automatically. The trained ATLAS9, MARCS, and
+PHOENIX weights are included, so interpolation works from any working directory
+without downloading additional data. The package loads only its bundled legacy
+PyTorch checkpoints, using `weights_only=False` because these contain training
+metadata as well as model weights. Only replace these files with trusted checkpoints.
 
+## Python usage
+
+```python
+from innterpol import innterpol
+
+# [M/H], [C/M], [O/M], effective temperature (K), log(g)
+atmosphere = innterpol([0, 0, 0, 5500, 2.5])
+# Shape (71, 4): log mass, log temperature, log pressure, log electron density.
 ```
 
-## Usage
+The other atmosphere grids have separate model implementations:
 
-Just run it in the directory with the above files, and you can get the interpolated atmosphere in (log) mass, temp, pressure and electronic density (indexes from 0 to 3). For example, to get the temperature for M/H = 0, C/M=O/M=0, Teff = 5000 and logg = 2.5 you can do in an interactive python shell:
+```python
+from innterpol.marcs import innterpol as interpolate_marcs
+from innterpol.phoenix import innterpol as interpolate_phoenix
 
-```
-% run "./innterpol.py"
-
-% nn_innterp = innterpol([0, 0, 0, 5500, 2.5])
-```
-
-and you can plot it out rebuilding the optical depths as in:
-
-```
-% taur = np.arange(-6.875, 2, 0.125)
-
-% import matplotlib.pyplot as pl 
-% pl.plot(taur, 10**nn_innterp[:,0])
-
-
+marcs_atmosphere, marcs_tau = interpolate_marcs([0, 0, 0, 5500, 2.5])
+phoenix_atmosphere, phoenix_tau = interpolate_phoenix([0, 0, 5500, 2.5])
+# PHOENIX inputs: [M/H], [Alpha/M], Teff (K), log(g).
+# Atmosphere shapes: (56, 4) for MARCS, (64, 4) for PHOENIX.
 ```
 
-for a **linear interpolator** that when used on the grid values recovers the Atlas9 model atmosphere quite precisely (to less than 0.2% (rms) accuracy) 
-is found in https://github.com/cwestend/iNNterpol/tree/main/iNNterpol_PCA12
+The input conventions, normalization, and output values follow the original
+scripts; see the grid-specific READMEs for scientific details. For ATLAS9 the
+optical depth coordinate is `numpy.arange(-6.875, 2, 0.125)`.
+
+For plotting, install `python -m pip install ".[plot]"` and use Matplotlib:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+plt.plot(np.arange(-6.875, 2, 0.125), 10 ** atmosphere[:, 1])
+plt.xlabel("log optical depth")
+plt.ylabel("Temperature (K)")
+```
+
+The former root `innterpol.py` entry point is now `example_atlas9.py`, to avoid
+shadowing the installed `innterpol` package. MARCS and PHOENIX script entry points
+remain available after installation. Training code and the older PCA12 experiment
+remain standalone research scripts and are excluded from the installed package.
+PCA12 requires SciPy, Matplotlib, and its separately downloaded coefficient file;
+see [its README](iNNterpol_PCA12/README.md).
+
+## Building and testing
+
+```sh
+python -m pip install build twine pytest
+python -m build
+python -m twine check dist/*
+python -m pip install dist/*.whl
+python -m pytest tests
+```
+
+Both the wheel and source distribution include all six trained checkpoint files.
+The automated checks install from the source distribution and exercise all three
+grids from an unrelated directory.
 
 ## Training
 

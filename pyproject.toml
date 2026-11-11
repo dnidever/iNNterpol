@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iNNterpol"
+version = "0.1.0"
+description = "Neural network interpolation of ATLAS9, MARCS, and PHOENIX stellar model atmospheres"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.21", "torch>=2.0"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.5"]
+test = ["pytest>=7", "build>=1", "twine>=4"]
+
+[project.urls]
+Repository = "https://github.com/dnidever/iNNterpol"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"innterpol.atlas9" = ["*.pth", "*.pth_encoder"]
+"innterpol.marcs" = ["*.pth", "*.pth_encoder_bak"]
+"innterpol.phoenix" = ["*.pth", "*.pth_encoder"]
