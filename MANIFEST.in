@@ -1,3 +1,4 @@
+include UPSTREAM_LICENSE.txt
 graft src
 include tests/*.py
 prune training_MARCS

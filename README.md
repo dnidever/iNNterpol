@@ -1,4 +1,12 @@
 # iNNterpol
+
+This installable distribution is maintained by David Nidever from
+[cwestend's original iNNterpol project](https://github.com/cwestend/iNNterpol).
+The original authors developed the neural networks and supplied the trained
+weights. This fork adds Python packaging and adjusts imports and checkpoint
+loading for installation; the scientific interpolation calculations are preserved.
+Please cite the original paper listed below when using this software.
+
 ### Neural Network Interpolator for Atlas9/MARCS/Phoenix stellar model atmospheres
 
 ![Temperature differences between original and obtained untrained (test) atmospheres](../assets/DTemp_chkCAE_16_71_M0_mp05_lgg45_scale.png?raw=true)
@@ -37,7 +45,13 @@ from these shall be undertaken in a future paper.
 
 ## Installation
 
-Requires Python 3.9 or newer. Install from this fork (no PyPI release is required):
+Requires Python 3.9 or newer. Install from PyPI:
+
+```sh
+python -m pip install innterpol
+```
+
+Alternatively, install directly from this fork:
 
 ```sh
 python -m pip install "git+https://github.com/dnidever/iNNterpol.git"

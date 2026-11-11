@@ -7,6 +7,8 @@ name = "iNNterpol"
 version = "0.1.0"
 description = "Neural network interpolation of ATLAS9, MARCS, and PHOENIX stellar model atmospheres"
 readme = "README.md"
+authors = [{name = "cwestend and the original iNNterpol contributors"}]
+maintainers = [{name = "David Nidever"}]
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.21", "torch>=2.0"]
 
@@ -15,7 +17,11 @@ plot = ["matplotlib>=3.5"]
 test = ["pytest>=7", "build>=1", "twine>=4"]
 
 [project.urls]
+"Original project" = "https://github.com/cwestend/iNNterpol"
 Repository = "https://github.com/dnidever/iNNterpol"
+
+[tool.setuptools]
+license-files = ["UPSTREAM_LICENSE.txt"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
